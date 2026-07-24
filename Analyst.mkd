@@ -1,0 +1,130 @@
+# Functionalities
+
+Projects
+    - user can creste new project
+    - user can edit project
+    - user can edit project
+    - user can view the projects list
+
+Tasks
+    - create task
+    - edit
+    - delete
+    - mark as done
+    - assign to project
+    - set priority
+    - set execution date
+    - move task on different day
+
+Filters
+    - by date
+    - by priority
+    - by task name
+
+Additional
+    - today task list
+    - due task list
+    - task amount in project
+
+# Entities
+Project
+
+| Field       | Type     | Desciption      |
+| ----------- | -------- | --------------- |
+| id          | int      | ID              |
+| name        | string   | project name    |
+| description | string   | description     |
+| created_at  | datetime | creation date   |
+| updated_at  | datetime | update date     |
+
+Task
+
+| Field        | Type     | Desciption             |
+| ------------ | -------- | ---------------------- |
+| id           | int      | ID                     |
+| title        | string   | title                  |
+| description  | string   | description            |
+| priority     | enum     | LOW/MEDIUM/HIGH        |
+| status       | enum     | TODO/IN_PROGRESS/DONE  |
+| due_date     | date     | due date               |
+| completed_at | datetime | date completed         |
+| created_at   | datetime | creation date          |
+| updated_at   | datetime | update date            |
+| project_id   | int      | project ID             |
+
+
+# Relations
+
++---------------------+
+|      PROJECT        |
++---------------------+
+| PK id               |
+| name                |
+| description         |
+| created_at          |
+| updated_at          |
++---------------------+
+           |
+           |
+           | 1
+           |
+           | N
+           |
++---------------------+
+|        TASK         |
++---------------------+
+| PK id               |
+| title               |
+| description         |
+| priority            |
+| status              |
+| due_date            |
+| completed_at        |
+| created_at          |
+| updated_at          |
+| FK project_id       |
++---------------------+
+
+# Endpoints
+
+Projects
+
+GET     /projects
+GET     /projects/{id}
+
+POST    /projects
+
+PUT     /projects/{id}
+
+DELETE  /projects/{id}
+
+Tasks
+
+GET     /tasks
+
+GET     /tasks/{id}
+
+POST    /tasks
+
+PUT     /tasks/{id}
+
+DELETE  /tasks/{id}
+
+Additionals
+
+PATCH   /tasks/{id}/complete
+
+PATCH   /tasks/{id}/move
+
+GET     /tasks/today
+
+GET     /tasks/overdue
+
+
+# Bussines logic
+
+- IF task hasn't got title cannot be mark as DONE
+- user cannot move task on past date
+- user cannot move tasks with status DONE
+- user has ability to not show tasks with status DONE on the list
+- if user not put date then today date will be assign
