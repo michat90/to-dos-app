@@ -1,0 +1,52 @@
+Task
+
+| Field        | Type          | Desciption             | Constraints                                | 
+| ------------ | --------------| ---------------------- |--------------------------------------------|
+| id           | int           | ID  PRIMARY KEY        |PK                                          |
+| title        | VARCHAR(100)  | title                  |NOT NULL                                    |
+| description  | VARCHAR(1000) | description            |NULL                                        |
+| priority     | enum          | LOW/MEDIUM/HIGH        |NOT NULL DEFAULT LOW                        |
+| status       | enum          | TODO/IN_PROGRESS/DONE  |NOT NULL DEFAULT TODO                       |
+| due_date     | DATE          | due date               |NULL                                        |
+| completed_at | TIMESTAMP     | date completed         |NULL                                        |
+| created_at   | TIMESTAMP     | creation date          |NOT NULL DEFAULT CURRENT_TIMESTAMP          |
+| updated_at   | TIMESTAM      | update date            |NULL DEFAULT CURRENT_TIMESTAMP          |
+| project_id   | int           | project ID             |NOT NULL FK -> project.id ON DELETE CASCADE |
+
+Project
+
+| Field       | Type          | Desciption      | Constraints                       | 
+| ----------- | ------------- | --------------- |-----------------------------------|
+| id          | int           | ID PRIMARY KEY  |PK                                 |
+| name        | VARCHAR(100)  | project name    |NOT NULL                           |
+| description | VARCHAR(1000) | description     |NULL                               |
+| created_at  | TIMESTAMP     | creation date   |NOT NULL DEFAULT CURRENT_TIMESTAMP |
+| updated_at  | TIMESTAMP     | update date     |NOT NULL DEFAULT CURRENT_TIMESTAMP |
+
+Logic for:
+-completed_at:
+    status = TODO → completed_at = NULL
+    status = IN_PROGRESS → completed_at = NULL
+    status = DONE → completed_at = CURRENT_TIMESTAMP
+    DONE → IN_PROGRESS/TODO → completed_at = NULL
+    again → DONE → set new current datetime datetime
+created_at / updated_at:
+    created by PostgreSQL
+
+Relation:
+
+Project 1 ─────────── N Task
+                      │
+                      └── project_id
+
+When user delete project all task also will be delete.
+Project DELETE
+      ↓
+ON DELETE CASCADE
+      ↓
+Task DELETEE
+
+
+TRIGGER
+├── updated_at
+└── completed_at

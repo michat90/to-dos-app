@@ -1,25 +1,28 @@
 # Functionalities
 
 Projects
-    - user can creste new project
+    - user can creste a new project
     - user can edit project
-    - user can edit project
+    - user can delete project
     - user can view the projects list
+    - user can view project details
 
 Tasks
-    - create task
-    - edit
-    - delete
-    - mark as done
-    - assign to project
-    - set priority
-    - set execution date
-    - move task on different day
+    - user can create task
+    - user can edit task
+    - user can delete task
+    - user can task mark as done
+    - user can assign task to project
+    - user ca set priority
+    - user can set execution date
+    - user can move task on different day
 
 Filters
-    - by date
-    - by priority
-    - by task name
+    - filter by project
+    - filter by status
+    - filter by priority
+    - filter by due date
+    - filter by title 
 
 Additional
     - today task list
@@ -30,7 +33,7 @@ Additional
 Project
 
 | Field       | Type     | Desciption      |
-| ----------- | -------- | --------------- |
+| ----------- | -------- | --------------- | 
 | id          | int      | ID              |
 | name        | string   | project name    |
 | description | string   | description     |
@@ -128,3 +131,13 @@ GET     /tasks/overdue
 - user cannot move tasks with status DONE
 - user has ability to not show tasks with status DONE on the list
 - if user not put date then today date will be assign
+- Project name cannot be empty.
+- Task title cannot be empty.
+- Priority must be one of:
+    LOW
+    MEDIUM
+    HIGH
+- Task must belong to an existing project.
+- Cannot create duplicate project names.
+- completed_at is automatically set when task becomes DONE.
+- completed_at is NULL when task is not DONE.
