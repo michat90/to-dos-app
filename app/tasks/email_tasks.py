@@ -5,12 +5,32 @@ import csv
 import io
 import selectors
 from sqlalchemy.orm import selectinload
+import logging
+from celery import Task
 
 from app.core.celery_app import celery_app
 from app.core.config import settings
 from app.db.database import AsyncSessionLocal
 from app.db.models.task import Task
 from sqlalchemy import select
+
+
+# Pobieramy logger dla naszych zadań
+logger = logging.getLogger("app.tasks")
+
+
+class EmailTaskWithLogging(Task):
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        """Metoda wywoływana automatycznie, gdy zadanie ostatecznie się nie powiedzie."""
+        recipient = kwargs.get("recipient_email", "nieznany")
+
+        # Zapisujemy szczegółowy log błędów 🚨
+        logger.error(
+            f"❌ [Celery Task Failed] ID: {task_id} | "
+            f"Błąd: {exc} | "
+            f"Odbiorca: {recipient}",
+            exc_info=einfo  # Dodaje pełny traceback do logów
+        )
 
 
 # bind=True,  # Pozwala na dostęp do kontekstu zadania (self)
@@ -81,10 +101,21 @@ async def _generate_tasks_csv() -> str:
         return output.getvalue()
 
 
-@celery_app.task(name="export_and_send_tasks_csv")
-def export_and_send_tasks_csv(user_id: int, recipient_email: str) -> str:
+@celery_app.task(
+    bind=True,
+    base=EmailTaskWithLogging,  # 👈 Podpinamy obsługę logowania
+    name="export_and_send_tasks_csv",
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 3},
+)
+def export_and_send_tasks_csv(self, user_id: int, recipient_email: str) -> str:
     """Zadanie Celery: generuje CSV i wysyła na podany adres e-mail."""
     try:
+        # Pobieramy informację, która to próba wykonania zadania 🔢
+        current_retry = self.request.retries
+        print(
+            f"🔄 [Próba {current_retry + 1}/4] Generowanie i wysyłka raportu na: {recipient_email}")
         # 1. Generujemy CSV w trybie async z pętlą dla Windows 🪟
         csv_data = asyncio.run(
             _generate_tasks_csv(),
@@ -119,5 +150,7 @@ def export_and_send_tasks_csv(user_id: int, recipient_email: str) -> str:
         return f"Export sent to {recipient_email}"
 
     except Exception as e:
-        print(f"❌ Błąd podczas generowania/wysyłania raportu: {e}")
+        print(
+            f"❌ [Próba {self.request.retries + 1}] Błąd podczas wysyłania: {e}")
+        # Celery przechwyci błąd dzięki autoretry_for i automatycznie zleci powtórzenie!
         raise e
