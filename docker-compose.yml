@@ -23,9 +23,70 @@ services:
     volumes:
       - redis_data:/data
 
+  api:
+    build: .
+    container_name: todo_api
+    restart: always
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - DATABASE_NAME=todo_db
+      - REDIS_HOST=redis
+      - DATABASE_URL=postgresql+psycopg_async://postgres:postgres@postgres:5432/todo_db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+
+  celery_worker:
+    build: .
+    container_name: todo_celery_worker
+    restart: always
+    command: celery -A app.core.celery_app.celery_app worker --loglevel=info -Q celery,high_priority,low_priority
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - DATABASE_NAME=todo_db
+      - REDIS_HOST=redis
+      - DATABASE_URL=postgresql+psycopg_async://postgres:postgres@postgres:5432/todo_db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+
+  celery_beat:
+    build: .
+    container_name: todo_celery_beat
+    restart: always
+    command: celery -A app.core.celery_app.celery_app beat --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - DATABASE_NAME=todo_db
+      - REDIS_HOST=redis
+      - DATABASE_URL=postgresql+psycopg_async://postgres:postgres@postgres:5432/todo_db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+
 volumes:
   existing_postgres_data:
     external: true
     name: 45eb26033c2aeedfae554ea6b6d0ec56f2bbbeb02d61a763681fc68779792006
-
   redis_data:

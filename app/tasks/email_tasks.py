@@ -6,7 +6,7 @@ import io
 import selectors
 from sqlalchemy.orm import selectinload
 import logging
-from celery import Task
+import celery
 
 from app.core.celery_app import celery_app
 from app.core.config import settings
@@ -19,7 +19,7 @@ from sqlalchemy import select
 logger = logging.getLogger("app.tasks")
 
 
-class EmailTaskWithLogging(Task):
+class EmailTaskWithLogging(celery.Task):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         """Metoda wywoływana automatycznie, gdy zadanie ostatecznie się nie powiedzie."""
         recipient = kwargs.get("recipient_email", "nieznany")

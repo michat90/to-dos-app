@@ -93,7 +93,8 @@ def export_tasks_csv(
     current_user: User = Depends(get_current_user),
 ):
     # Zlecamy zadanie do Celery i natychmiast zwracamy odpowiedź HTTP ⚡
-    export_and_send_tasks_csv.delay(
+    print("--> WYSYŁAM ZADANIE DO CELERY...")
+    result = export_and_send_tasks_csv.delay(
         user_id=current_user.id, recipient_email=recipient_email)
-
+    print(f"--> ZADANIE WYSŁANE, ID: {result.id}")
     return {"message": "Generowanie raportu rozpoczęte. Plik CSV zostanie wysłany na Twój e-mail."}
