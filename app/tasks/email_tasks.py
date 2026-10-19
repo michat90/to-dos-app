@@ -7,6 +7,9 @@ import selectors
 from sqlalchemy.orm import selectinload
 import logging
 import celery
+from asgiref.sync import async_to_sync
+import selectors
+import sys
 
 from app.core.celery_app import celery_app
 from app.core.config import settings
@@ -116,12 +119,22 @@ def export_and_send_tasks_csv(self, user_id: int, recipient_email: str) -> str:
         current_retry = self.request.retries
         print(
             f"🔄 [Próba {current_retry + 1}/4] Generowanie i wysyłka raportu na: {recipient_email}")
+
         # 1. Generujemy CSV w trybie async z pętlą dla Windows 🪟
-        csv_data = asyncio.run(
+        if sys.platform == "win32":
+            csv_data = asyncio.run(
+                _generate_tasks_csv(),
+                loop_factory=lambda: asyncio.SelectorEventLoop(
+                    selectors.SelectSelector())
+            )
+        else:
+            csv_data = asyncio.run(_generate_tasks_csv(user_id))
+        # csv_data = async_to_sync(_generate_tasks_csv)()
+        '''csv_data = asyncio.run(
             _generate_tasks_csv(),
             loop_factory=lambda: asyncio.SelectorEventLoop(
                 selectors.SelectSelector())
-        )
+        )'''
 
         # 2. Tworzymy wiadomość e-mail z załącznikiem ✉️
         msg = EmailMessage()

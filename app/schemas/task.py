@@ -54,7 +54,7 @@ class TaskBase(BaseModel):
 
 
 class TaskCreate(TaskBase):
-    # completed_at: datetime | None = None
+    completed_at: datetime | None = None
     project_id: int
 
 

@@ -90,7 +90,7 @@ async def test_create_task_sets_completed_at_when_status_is_completed(
     def mock_create(task_data: TaskCreate, **kwargs) -> Task:
         # Symulujemy logikę serwisu: jeśli status == DONE, completed_at ustawiamy na teraz
         completed_val = task_data.completed_at
-        if task_data.status == StatusEnum.DONE and not completed_val:
+        if task_data.status == StatusEnum.DONE and not getattr(task_data, "completed_at", None):
             completed_val = datetime.now(timezone.utc)
 
         return create_dummy_task(

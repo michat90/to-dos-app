@@ -57,7 +57,7 @@ class TaskService:
                 raise NotFoundException("Project", task_data.project_id)
 
             # Autouzupełnienie completed_at dla ukończonych zadań
-            if task_data.status == StatusEnum.DONE and not task_data.completed_at:
+            if task_data.status == StatusEnum.DONE and not getattr(task_data, "completed_at", None):
                 task_data.completed_at = datetime.now(timezone.utc)
 
             task = await self.uow.tasks.create(task_data)
