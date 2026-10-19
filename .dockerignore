@@ -1,0 +1,21 @@
+# Wirtualne środowisko i pamięć podręczna Pythona 🐍
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Pliki środowiskowe i prywatne 🔒
+.env
+.env.*
+
+# Git i edytory kodu 🛠️
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Bazy danych i logi lokalne 🗄️
+*.sqlite3
+*.log
+celerybeat-schedule*

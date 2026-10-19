@@ -40,5 +40,13 @@ celery_app.conf.beat_schedule = {
     # },
 }
 
+celery_app.conf.task_routes = {
+    # Wysyłka maili i powiadomień trafia do szybkiej kolejki ⚡
+    "send_email_*": {"queue": "high_priority"},
+
+    # Ciężkie eksporty trafiają do powolnej kolejki 🐢
+    "export_*": {"queue": "low_priority"},
+}
+
 # Automatycznie wykrywaj zadania w module app.tasks
 celery_app.autodiscover_tasks(["app.tasks"])

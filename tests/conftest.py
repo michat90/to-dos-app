@@ -1,15 +1,19 @@
 from typing import AsyncGenerator
 from httpx import ASGITransport, AsyncClient
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 import pytest_asyncio
 import pytest
 import fakeredis.aioredis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+
 from app.core.redis import get_redis
 from app.db.database import get_db
 from app.db.models.project import Base
 from app.main import app
+from app.core.celery_app import celery_app
+from app.core.security import hash_password
+from app.db.models.user import User
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
@@ -87,3 +91,35 @@ async def client(override_get_db_session, fake_redis):
         yield ac
 
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def enable_celery_eager_mode():
+    """Konfiguruje Celery do synchronicznego wykonywania zadań w pamięci RAM."""
+    celery_app.conf.update(
+        task_always_eager=True,          # ⚡ Wykonuj zadania natychmiast synchronicznie
+        task_eager_propagates=True,      # 💥 Przekazuj wyjątki bezpośrednio do testu
+        broker_url="memory://",          # 🧠 In-memory broker
+        result_backend="cache",          # 💾 In-memory result backend
+        cache_backend="memory",
+    )
+    yield
+
+
+@pytest_asyncio.fixture
+async def test_user(override_get_db_session):
+    """Tworzy testowego użytkownika w bazie danych dla potrzeb testów."""
+    user = User(
+        email="testuser@example.com",
+        hashed_password=hash_password("testpassword123"),
+        is_active=True
+    )
+    override_get_db_session.add(user)
+    await override_get_db_session.commit()
+    await override_get_db_session.refresh(user)
+
+    yield user  # Przekazujemy użytkownika do testu
+
+    # Czyszczenie po teście
+    await override_get_db_session.delete(user)
+    await override_get_db_session.commit()
